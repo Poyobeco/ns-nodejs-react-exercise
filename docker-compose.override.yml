@@ -1,0 +1,19 @@
+services:
+  backend:
+    build: ./backend
+    command: bash -c "npm install && npx ts-node init.ts && npm run build && npm start"
+    volumes:
+      - ./backend:/app
+      - ./data:/data
+      - /app/node_modules
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-fintech_user}:${DB_PASSWORD:-fintech_password}@db:5432/${DB_NAME:-fintech_db}?sslmode=disable
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
