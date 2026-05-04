@@ -9,21 +9,13 @@ export const transactionController = {
       const limit = parseInt(req.query.limit as string) || 100;
 
       const transactions = await Transaction.findAll({
+        include: [{ model: Category, as: 'category_rel' }],
         offset: skip,
         limit: limit,
         order: [['id', 'ASC']]
       });
 
-      const transactionsWithCategory = await Promise.all(
-        transactions.map(async (transaction) => {
-          const category = await Category.findByPk(transaction.category_id);
-          const data = transaction.toJSON();
-          data.category_rel = category ? { id: category.id, name: category.name } : undefined;
-          return data;
-        })
-      );
-
-      res.json(transactionsWithCategory);
+      res.json(transactions.map(t => t.toJSON()));
     } catch (error) {
       res.status(500).json({ detail: 'Internal server error' });
     }
