@@ -1,6 +1,8 @@
 import { DataTypes, Model, Optional, Association } from 'sequelize';
 import { sequelize } from '../config/database';
 import { Category } from './Category';
+import { Tag } from './Tag';
+import { TransactionTag } from './TransactionTag';
 
 interface TransactionAttributes {
   id: number;
@@ -27,14 +29,17 @@ export class Transaction extends Model<TransactionAttributes, TransactionCreatio
   declare readonly updatedAt: Date;
 
   declare category_rel?: Category;
+  declare tags?: Tag[];
 
   declare static associations: {
     category_rel: Association<Transaction, Category>;
+    tags: Association<Transaction, Tag>;
   };
 
   toJSON() {
     const values = super.toJSON() as TransactionAttributes & {
       category_rel?: { id: number; name: string };
+      tags?: Array<{ id: number; name: string }>;
     };
     return {
       id: values.id,
@@ -47,7 +52,8 @@ export class Transaction extends Model<TransactionAttributes, TransactionCreatio
       category_rel: values.category_rel ? {
         id: values.category_rel.id,
         name: values.category_rel.name
-      } : undefined
+      } : undefined,
+      tags: values.tags ? values.tags.map(t => ({ id: t.id, name: t.name })) : undefined
     };
   }
 }
@@ -109,5 +115,19 @@ Transaction.belongsTo(Category, {
 
 Category.hasMany(Transaction, {
   foreignKey: 'category_id',
+  as: 'transactions'
+});
+
+Transaction.belongsToMany(Tag, {
+  through: TransactionTag,
+  foreignKey: 'transaction_id',
+  otherKey: 'tag_id',
+  as: 'tags'
+});
+
+Tag.belongsToMany(Transaction, {
+  through: TransactionTag,
+  foreignKey: 'tag_id',
+  otherKey: 'transaction_id',
   as: 'transactions'
 });
