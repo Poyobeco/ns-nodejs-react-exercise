@@ -1,5 +1,7 @@
 import { sequelize, connectDatabase } from './src/config/database';
 import './src/models/Category';
+import './src/models/Tag';
+import './src/models/TransactionTag';
 import './src/models/Transaction';
 
 async function init() {
